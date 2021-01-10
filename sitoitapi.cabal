@@ -1,0 +1,54 @@
+cabal-version: 2.1
+
+name:           sitoitapi
+version:        0.1.0.0
+license-file:   LICENSE
+author:         Jonatan Borkowski
+maintainer:     Jonatan Borkowski
+copyright:      Jonatan Borkowski
+category:       Unclassified
+build-type:     Simple
+
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/jborkowski/sitoitapi
+
+library
+  exposed-modules:
+      Lib
+  hs-source-dirs:
+      src
+  build-depends:
+        base >=4.7 && <5
+      , text
+  default-language: Haskell2010
+
+executable sitoitapi-exe
+  main-is: Main.hs
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      base >=4.7 && <5
+    , sitoitapi
+  default-language: Haskell2010
+
+test-suite sitoitapi-test
+  type:             exitcode-stdio-1.0
+  default-language: Haskell2010
+  ghc-options:      -threaded -rtsopts -with-rtsopts=-N
+  hs-source-dirs:   test
+  main-is:          Spec.hs
+  other-modules:
+    sitoit.ExampleSpec
+  -- dependencies in library
+  build-depends:
+    , base
+    , hspec
+    , hedgehog
+    , hspec-hedgehog
+    , sitoitapi
+  build-tool-depends: hspec-discover:hspec-discover == 2.*
