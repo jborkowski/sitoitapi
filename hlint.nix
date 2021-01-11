@@ -8,9 +8,9 @@ let
     src = pkgs.fetchFromGitHub {
       owner = "ndmitchell";
       repo = "hlint";
-      # 3.2.1 release
-      rev = "57b664d77d27845629c093f6479b6104cf6455e2";
-      sha256 = "0y0c7vk9p6wj7vx4cfn6h0mg62jy03d0s54ydhmwv5c7112bcpqf";
+      # 3.2.6 release
+      rev = "fca7ac0b20134fa085556766a7f82a75b524c550";
+      sha256 = "1xffw93mjqy4nfarzjdqav32hq7pjwcwrphdg4by39002hcq61bh";
     };
   };
 in hsPkgs.hlint.components.exes.hlint
