@@ -3,14 +3,14 @@
 module Config.Types where
 
 import qualified Data.Text as T
+import Data.ByteString (ByteString)
 
-data DatabaseConfig = MkDatabaseConfig
-  { dbUsername :: T.Text
-  , dbPassword :: T.Text
-  , dbURI      :: T.Text
-  } deriving Show
+newtype DBConnectionString = DBConnectionString
+  { libpgConnectionString :: ByteString } deriving (Show)
 
-data AppConfig = MkAppConfig
+data AppConfig = AppConfig
   { jwtSecret :: T.Text
-  , database  :: DatabaseConfig
-  } deriving Show
+  , database  :: DBConnectionString
+  , host      :: T.Text
+  , port      :: Int
+  } deriving (Show)
