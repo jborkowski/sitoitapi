@@ -1,4 +1,8 @@
 module Main where
 
+import Config.Config (loadConfig)
+
 main :: IO ()
-main = putStrLn "Hello World!"
+main = do
+  config <- loadConfig "./application.config"
+  print config

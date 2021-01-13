@@ -18,7 +18,8 @@ source-repository head
 
 library
   exposed-modules:
-      Lib
+      Config.Config
+      Config.Types
   hs-source-dirs:
       src
   build-depends:
@@ -38,6 +39,7 @@ library
       , http-client >= 0.5
       , bytestring >= 0.10
       , transformers
+      , configurator
   default-language: Haskell2010
 
 executable sitoitapi-exe
