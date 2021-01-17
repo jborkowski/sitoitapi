@@ -2,15 +2,15 @@
 
 module Config.Types where
 
-import qualified Data.Text as T
+import Data.Text (Text)
 import Data.ByteString (ByteString)
 
 newtype DBConnectionString = DBConnectionString
   { libpgConnectionString :: ByteString } deriving (Show)
 
 data AppConfig = AppConfig
-  { jwtSecret :: T.Text
+  { jwtSecret :: Text
   , database  :: DBConnectionString
-  , host      :: T.Text
+  , host      :: Text
   , port      :: Int
   } deriving (Show)

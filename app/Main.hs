@@ -1,11 +1,15 @@
+{-# LANGUAGE RecordWildCards #-}
 module Main where
 
 import Config.Config (loadConfig)
-import Config.Types (database)
+import Config.Types
 import Init
+import App (runApp)
 
 main :: IO ()
 main = do
-  config <- loadConfig "./application.config"
-  initDB (database config)
-  print config
+  AppConfig{..} <- loadConfig "./application.config"
+  initDB database
+  pool <- initConnectionPool database
+  putStrLn ("Listening on " ++ show port)
+  runApp pool port host

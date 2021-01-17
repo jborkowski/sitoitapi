@@ -21,6 +21,10 @@ library
       Init
       Config.Config
       Config.Types
+      API
+      Flashcard.API
+      Flashcard.Types
+      App
   hs-source-dirs:
       src
   build-depends:
