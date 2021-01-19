@@ -9,7 +9,7 @@ module Flashcard.API where
 
 import Servant
 import Flashcard.Types
-import Data.Pool (Pool, withResource, takeResource, putResource)
+import Data.Pool (Pool, withResource)
 import Database.PostgreSQL.Simple (Connection, query, query_, Query, Only(..), execute, begin, commit)
 import Database.PostgreSQL.Simple.SqlQQ
 import Control.Monad.IO.Class (liftIO)

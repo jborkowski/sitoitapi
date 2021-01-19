@@ -4,6 +4,7 @@ module Config.Types where
 
 import Data.Text (Text)
 import Data.ByteString (ByteString)
+import Network.Wai.Handler.Warp (HostPreference)
 
 newtype DBConnectionString = DBConnectionString
   { libpgConnectionString :: ByteString } deriving (Show)
@@ -11,6 +12,6 @@ newtype DBConnectionString = DBConnectionString
 data AppConfig = AppConfig
   { jwtSecret :: Text
   , database  :: DBConnectionString
-  , host      :: Text
+  , host      :: HostPreference
   , port      :: Int
   } deriving (Show)

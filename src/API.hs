@@ -1,11 +1,13 @@
+{-# LANGUAGE TypeOperators #-}
 -- | Application API aggregator
 
 module API (API, api) where
 
 import Flashcard.API (FlashcardAPI)
-import Servant (Proxy(..))
+import User.API (UserAPI)
+import Servant (Proxy(..), (:<|>))
 
-type API = FlashcardAPI
+type API = UserAPI :<|> FlashcardAPI
 
 api :: Proxy API
 api = Proxy
