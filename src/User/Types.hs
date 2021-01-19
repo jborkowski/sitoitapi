@@ -55,3 +55,12 @@ data DBUser = DBUser
 
 instance FromRow DBUser where
   fromRow = DBUser <$> field <*> field <*> field <*> field <*> field <*> field
+
+data UserLoginResponse
+  = UserNotFound
+  | Unauthorized
+  | InvalidForm
+  | Logged
+  deriving (Show, Eq, Generic)
+
+instance ToJSON UserLoginResponse

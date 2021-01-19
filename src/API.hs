@@ -1,13 +1,24 @@
+{-# LANGUAGE DataKinds     #-}
 {-# LANGUAGE TypeOperators #-}
 -- | Application API aggregator
 
-module API (API, api) where
+module API
+  ( API
+  , api
+  , server
+  ) where
 
-import Flashcard.API (FlashcardAPI)
-import User.API (UserAPI)
-import Servant (Proxy(..), (:<|>))
+import           Config.Types        (AppM)
+import           Flashcard.API       (FlashcardAPI)
+import           Servant             (Proxy (..), ServerT, (:<|>))
+import           Servant.Auth.Server (CookieSettings, JWT (..), JWTSettings)
+import           User.API            (UserAPI, login)
 
-type API = UserAPI :<|> FlashcardAPI
+--type API auths = UserAPI  -- :<|> FlashcardAPI
+type API = UserAPI  -- :<|> FlashcardAPI
 
-api :: Proxy API
+server :: CookieSettings -> JWTSettings -> ServerT (API ) AppM
+server cs jwts = login cs jwts
+
+api :: Proxy (API) --'[JWT])
 api = Proxy

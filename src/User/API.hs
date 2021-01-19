@@ -12,38 +12,64 @@ module User.API
   ) where
 
 import           Authentication                   (validate)
+import           Config.Types                     (AppM, connectionPool)
+import           Control.Monad.Except             (throwError)
 import           Control.Monad.IO.Class           (liftIO)
-import           Data.Pool                        (Pool, withResource)
+import           Control.Monad.Reader
+import           Data.Maybe
+import           Data.Pool                        (Pool, putResource, takeResource, withResource)
 import           Database.PostgreSQL.Simple       (Connection, Only (..), Query, begin, commit, execute,
                                                    query, query_)
 import           Database.PostgreSQL.Simple.SqlQQ
-import           Servant
+import           Lib                              (withBody)
+import           Logger.Types
+import           Servant                          (Get, Header, Headers, JSON, Post, ReqBody, err305, err401,
+                                                   (:>))
+import           Servant.Auth                     as SA
+import           Servant.Auth.Server              as SAS
 import           User.Types
--- import Control.Monad.Except
-import           Control.Exception                (throwIO)
-import           Control.Monad.Except             (throwError)
 
-import           Data.Maybe
+type Login =
+  "login"
+  :> ReqBody '[JSON] LoginRequest
+  :> Post '[JSON] (Headers '[ Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] UserLoginResponse)
 
-type Login = "login" :> ReqBody '[JSON] LoginRequest :> PostCreated '[JSON] AuthenticatedUser
 type GetUser = "my" :> Get '[JSON] AuthenticatedUser
 
 type UserAPI = Login -- :<|> GetUser
 
-login :: Pool Connection -> LoginRequest -> Handler AuthenticatedUser
-login conns req@LoginRequest{..} =
-  liftIO . withResource conns $ \conn -> do
-  users <- query conn getByEmailSQL (Only reqEmail)
+login :: CookieSettings
+      -> JWTSettings
+      -> LoginRequest
+      -> AppM (Headers '[ Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie ] UserLoginResponse)
+login cookieSettings jwtSetting req@LoginRequest{..} = do
+  conns <- asks connectionPool
+  (conn, pool) <- liftIO $ takeResource conns
+  (users :: [DBUser]) <- liftIO $ query conn getByEmailSQL (Only reqEmail)
   case listToMaybe users of
-    Nothing -> error "Cannot find user"
-      -- throwError err404
+    Nothing -> do
+      liftIO $ putResource pool conn
+      err401 `withBody` Unauthorized
     Just user ->
       case validate req user of
-        True ->
-          error "OK"
         False ->
-          error "NOK"
+          err401 `withBody` Unauthorized
+        True ->
+          err305 `withBody` InvalidForm
+   -- liftIO $ case listToMaybe users of
+   --   Nothing -> do
+   --     throwIO err401
+   --   Just usr ->
+   --    throwIO err300
 
+
+
+--liftIO $ withResource conns $ \conn -> do
+    --users <- query conn getByEmailSQL (Only reqEmail)
+    --case listToMaybe users of
+      --Nothing -> undefined -- throwError err401
+      --Just usr ->
+       -- usr
 
 getByEmailSQL :: Query
 getByEmailSQL = [sql|

@@ -19,4 +19,5 @@ loadConfig path = do
   hostStr    <- C.require config "app-host"
   let host = fromString hostStr
   port       <- C.require config "app-port"
+  environment<- C.require config "app-env"
   pure AppConfig{..}

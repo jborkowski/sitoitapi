@@ -53,6 +53,8 @@ library
       , resource-pool
       , transformers
       , configurator
+      , fast-logger
+      , exceptions
   default-language: Haskell2010
 
 executable sitoitapi-exe
@@ -63,6 +65,8 @@ executable sitoitapi-exe
   build-depends:
       base >=4.10 && <5
     , sitoitapi
+    , servant-server
+    , servant-auth-server
     , warp
   default-language: Haskell2010
 
