@@ -1,27 +1,29 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE QuasiQuotes         #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 -- |
 
 module User.API
   ( UserAPI
-  , login) where
+  , login
+  ) where
 
-import Servant
-import User.Types
-import Data.Pool (Pool, withResource)
-import Database.PostgreSQL.Simple (Connection, query, query_, Query, Only(..), execute, begin, commit)
-import Database.PostgreSQL.Simple.SqlQQ
-import Control.Monad.IO.Class (liftIO)
-import Authentication (validate)
+import           Authentication                   (validate)
+import           Control.Monad.IO.Class           (liftIO)
+import           Data.Pool                        (Pool, withResource)
+import           Database.PostgreSQL.Simple       (Connection, Only (..), Query, begin, commit, execute,
+                                                   query, query_)
+import           Database.PostgreSQL.Simple.SqlQQ
+import           Servant
+import           User.Types
 -- import Control.Monad.Except
-import Control.Exception (throwIO)
+import           Control.Exception                (throwIO)
 import           Control.Monad.Except             (throwError)
 
-import Data.Maybe
+import           Data.Maybe
 
 type Login = "login" :> ReqBody '[JSON] LoginRequest :> PostCreated '[JSON] AuthenticatedUser
 type GetUser = "my" :> Get '[JSON] AuthenticatedUser

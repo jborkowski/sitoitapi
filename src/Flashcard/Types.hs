@@ -1,18 +1,20 @@
 {-# LANGUAGE DuplicateRecordFields #-}
-{-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 
 -- | Types for flashcards
 
-module Flashcard.Types where
+module Flashcard.Types
+  where
 
-import Data.Aeson (ToJSON(..), FromJSON(..), Value(..), (.:), (.=), object)
-import Data.Aeson.Types (prependFailure, typeMismatch)
-import Database.PostgreSQL.Simple.FromRow (FromRow, fromRow, field)
-import Database.PostgreSQL.Simple.FromField
-import Data.UUID (UUID)
-import Data.Text (Text)
-import Data.Time (LocalTime)
+import           Data.Aeson                           (FromJSON (..), ToJSON (..), Value (..), object, (.:),
+                                                       (.=))
+import           Data.Aeson.Types                     (prependFailure, typeMismatch)
+import           Data.Text                            (Text)
+import           Data.Time                            (LocalTime)
+import           Data.UUID                            (UUID)
+import           Database.PostgreSQL.Simple.FromField
+import           Database.PostgreSQL.Simple.FromRow   (FromRow, field, fromRow)
 
 
 data Flashcard = Flashcard
@@ -51,9 +53,9 @@ instance FromJSON Flashcard where
       (typeMismatch "Object" invalid)
 
 data FlashcardRequest = FlashcardRequest
-  { requestAnswer :: Text
+  { requestAnswer   :: Text
   , requestQuestion :: Text
-  , requestStyle :: Text
+  , requestStyle    :: Text
   , requestCategory :: Text
   } deriving (Show, Eq, Ord)
 

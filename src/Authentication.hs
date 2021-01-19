@@ -1,11 +1,14 @@
 {-# LANGUAGE RecordWildCards #-}
-module Authentication where
+module Authentication
+  ( encryptPassword
+  , validate)
+  where
 
-import Crypto.BCrypt (hashPasswordUsingPolicy, fastBcryptHashingPolicy, validatePassword)
+import           Crypto.BCrypt         (fastBcryptHashingPolicy, hashPasswordUsingPolicy, validatePassword)
 import qualified Data.ByteString.Char8 as B
-import Data.Maybe (fromMaybe)
-import User.Types (DBUser(..), LoginRequest(..))
-import qualified Data.Text.Encoding as E
+import           Data.Maybe            (fromMaybe)
+import qualified Data.Text.Encoding    as E
+import           User.Types            (DBUser (..), LoginRequest (..))
 
 encryptPassword :: B.ByteString -> IO B.ByteString
 encryptPassword password =

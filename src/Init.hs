@@ -4,16 +4,17 @@
 -- |
 
 module Init
-  ( initDB
-  , initConnectionPool
+  ( initConnectionPool
+  , initDB
   ) where
 
-import Control.Exception (bracket)
-import Data.Pool
-import Database.PostgreSQL.Simple (Connection, Query, connectPostgreSQL, close, execute_, execute, Only(..))
-import Database.PostgreSQL.Simple.SqlQQ
-import Config.Types (DBConnectionString(..))
-import Authentication
+import           Authentication
+import           Config.Types                     (DBConnectionString (..))
+import           Control.Exception                (bracket)
+import           Data.Pool
+import           Database.PostgreSQL.Simple       (Connection, Only (..), Query, close, connectPostgreSQL,
+                                                   execute, execute_)
+import           Database.PostgreSQL.Simple.SqlQQ
 
 initDB :: DBConnectionString -> IO ()
 initDB (DBConnectionString connStr) =

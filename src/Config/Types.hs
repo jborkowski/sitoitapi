@@ -1,10 +1,11 @@
 -- | App Configuration Types
 
-module Config.Types where
+module Config.Types
+  where
 
-import Data.Text (Text)
-import Data.ByteString (ByteString)
-import Network.Wai.Handler.Warp (HostPreference)
+import           Data.ByteString          (ByteString)
+import           Data.Text                (Text)
+import           Network.Wai.Handler.Warp (HostPreference)
 
 newtype DBConnectionString = DBConnectionString
   { libpgConnectionString :: ByteString } deriving (Show)

@@ -1,21 +1,22 @@
-{-# LANGUAGE DeriveGeneric #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE DeriveGeneric         #-}
 {-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE OverloadedStrings     #-}
+{-# LANGUAGE RecordWildCards       #-}
 -- |
 
-module User.Types where
+module User.Types
+  where
 
-import Data.Aeson (ToJSON(..), FromJSON(..), Value(..), (.:), (.=), object)
-import Data.Aeson.Types (prependFailure, typeMismatch)
-import GHC.Generics
-import Database.PostgreSQL.Simple.FromField
-import Servant.Auth as SA
-import Servant.Auth.Server (ToJWT, FromJWT)
-import Data.ByteString (ByteString)
-import Data.Time (LocalTime)
-import Database.PostgreSQL.Simple.FromRow (FromRow, fromRow, field)
-import Data.Text (Text)
+import           Data.Aeson                         (FromJSON (..), ToJSON (..), Value (..), object, (.:),
+                                                     (.=))
+import           Data.Aeson.Types                   (prependFailure, typeMismatch)
+import           Data.ByteString                    (ByteString)
+import           Data.Text                          (Text)
+import           Data.Time                          (LocalTime)
+import           Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
+import           GHC.Generics
+import           Servant.Auth.Server                (FromJWT, ToJWT)
+
 
 data LoginRequest = LoginRequest
   { reqEmail    :: Text

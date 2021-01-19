@@ -1,5 +1,5 @@
-{-# LANGUAGE RecordWildCards   #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RecordWildCards   #-}
 -- |
 
 module Config.Config
@@ -8,7 +8,7 @@ module Config.Config
 
 import           Config.Types
 import qualified Data.Configurator as C
-import           Data.String (fromString)
+import           Data.String       (fromString)
 
 loadConfig :: FilePath -> IO AppConfig
 loadConfig path = do

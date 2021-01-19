@@ -1,19 +1,21 @@
 {-# LANGUAGE DataKinds           #-}
 {-# LANGUAGE OverloadedStrings   #-}
-{-# LANGUAGE TypeOperators       #-}
 {-# LANGUAGE QuasiQuotes         #-}
 {-# LANGUAGE RecordWildCards     #-}
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators       #-}
 
-module Flashcard.API where
+module Flashcard.API
+  where
 
-import Servant
-import Flashcard.Types
-import Data.Pool (Pool, withResource)
-import Database.PostgreSQL.Simple (Connection, query, query_, Query, Only(..), execute, begin, commit)
-import Database.PostgreSQL.Simple.SqlQQ
-import Control.Monad.IO.Class (liftIO)
-import Data.UUID (UUID)
+import           Control.Monad.IO.Class           (liftIO)
+import           Data.Pool                        (Pool, withResource)
+import           Data.UUID                        (UUID)
+import           Database.PostgreSQL.Simple       (Connection, Only (..), Query, begin, commit, execute,
+                                                   query, query_)
+import           Database.PostgreSQL.Simple.SqlQQ
+import           Flashcard.Types
+import           Servant
 
 type CreateFlashcard = ReqBody '[JSON] FlashcardRequest :> PostCreated '[JSON] Flashcard
 type GetFlashcards = Get '[JSON] [Flashcard]
