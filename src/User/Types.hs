@@ -12,6 +12,7 @@ import           Data.Aeson                         (FromJSON (..), ToJSON (..),
 import           Data.Aeson.Types                   (prependFailure, typeMismatch)
 import           Data.ByteString                    (ByteString)
 import           Data.Text                          (Text)
+import           Data.Text.Encoding                 (decodeUtf8)
 import           Data.Time                          (LocalTime)
 import           Database.PostgreSQL.Simple.FromRow (FromRow, field, fromRow)
 import           GHC.Generics
@@ -53,14 +54,18 @@ data DBUser = DBUser
   , dbCreatedAt :: LocalTime
   }
 
+toAuthUser :: DBUser -> AuthenticatedUser
+toAuthUser (DBUser email fn ln _ isAdmin _) =
+  AUser (decodeUtf8 email) (decodeUtf8 fn) (decodeUtf8 ln) isAdmin
+
 instance FromRow DBUser where
   fromRow = DBUser <$> field <*> field <*> field <*> field <*> field <*> field
 
 data UserLoginResponse
   = UserNotFound
-  | Unauthorized
+  | UnauthorizedUser
   | InvalidForm
-  | Logged
-  deriving (Show, Eq, Generic)
+  | Logged { token :: String, user :: AuthenticatedUser }
+  deriving (Show, Generic)
 
 instance ToJSON UserLoginResponse

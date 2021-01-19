@@ -8,16 +8,17 @@ module API
   , server
   ) where
 
-import           Config.Types        (AppM)
-import           Flashcard.API       (FlashcardAPI)
-import           Servant             (Proxy (..), ServerT, (:<|>))
-import           Servant.Auth.Server (CookieSettings, JWT (..), JWTSettings)
-import           User.API            (UserAPI, login)
+import           Config.Types           (AppM)
+import           Control.Monad.IO.Class (MonadIO (..))
+import           Flashcard.API          (FlashcardAPI)
+import           Servant                (Proxy (..), ServerT, (:<|>))
+import           Servant.Auth.Server    (CookieSettings, JWT (..), JWTSettings)
+import           User.API               (UserAPI, login)
 
 --type API auths = UserAPI  -- :<|> FlashcardAPI
 type API = UserAPI  -- :<|> FlashcardAPI
 
-server :: CookieSettings -> JWTSettings -> ServerT (API ) AppM
+server :: CookieSettings -> JWTSettings -> ServerT (API ) (AppM IO)
 server cs jwts = login cs jwts
 
 api :: Proxy (API) --'[JWT])

@@ -16,60 +16,64 @@ import           Config.Types                     (AppM, connectionPool)
 import           Control.Monad.Except             (throwError)
 import           Control.Monad.IO.Class           (liftIO)
 import           Control.Monad.Reader
+import           Data.ByteString.Lazy.Char8       as Char8
 import           Data.Maybe
 import           Data.Pool                        (Pool, putResource, takeResource, withResource)
+import           Data.Text.Encoding               (decodeUtf8)
 import           Database.PostgreSQL.Simple       (Connection, Only (..), Query, begin, commit, execute,
                                                    query, query_)
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Lib                              (withBody)
 import           Logger.Types
-import           Servant                          (Get, Header, Headers, JSON, Post, ReqBody, err305, err401,
-                                                   (:>))
-import           Servant.Auth                     as SA
-import           Servant.Auth.Server              as SAS
+import           Servant
+import           Servant.Auth
+import           Servant.Auth.Server
 import           User.Types
 
 type Login =
   "login"
   :> ReqBody '[JSON] LoginRequest
-  :> Post '[JSON] (Headers '[ Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie] UserLoginResponse)
+  :> Post '[JSON] UserLoginResponse
 
 type GetUser = "my" :> Get '[JSON] AuthenticatedUser
 
 type UserAPI = Login -- :<|> GetUser
 
-login :: CookieSettings
+login :: (MonadIO m)
+      => CookieSettings
       -> JWTSettings
       -> LoginRequest
-      -> AppM (Headers '[ Header "Set-Cookie" SetCookie, Header "Set-Cookie" SetCookie ] UserLoginResponse)
-login cookieSettings jwtSetting req@LoginRequest{..} = do
+      -> AppM m UserLoginResponse
+login cookieSettings jwtSettings req@LoginRequest{..} = do
   conns <- asks connectionPool
   (conn, pool) <- liftIO $ takeResource conns
   (users :: [DBUser]) <- liftIO $ query conn getByEmailSQL (Only reqEmail)
   case listToMaybe users of
     Nothing -> do
       liftIO $ putResource pool conn
-      err401 `withBody` Unauthorized
+      err401 `withBody` UnauthorizedUser
     Just user ->
       case validate req user of
-        False ->
-          err401 `withBody` Unauthorized
-        True ->
-          err305 `withBody` InvalidForm
-   -- liftIO $ case listToMaybe users of
-   --   Nothing -> do
-   --     throwIO err401
-   --   Just usr ->
-   --    throwIO err300
+        False -> do
+          liftIO $ putResource pool conn
+          err401 `withBody` UnauthorizedUser
+        True -> do
+          liftIO $ putResource pool conn
+          let authedUser = toAuthUser user
 
+          eJWT <- liftIO $ makeJWT authedUser jwtSettings Nothing
 
+          case eJWT of
+            Left a     -> do
+              err401 `withBody` UnauthorizedUser
+            Right jwt -> do
+              pure $ Logged (Char8.unpack jwt) authedUser
 
---liftIO $ withResource conns $ \conn -> do
-    --users <- query conn getByEmailSQL (Only reqEmail)
-    --case listToMaybe users of
-      --Nothing -> undefined -- throwError err401
-      --Just usr ->
-       -- usr
+              -- xsrfCookie <- liftIO $ makeXsrfCookie cookieSettings
+              -- let modifiedSessionCookie = sessionCookie { setCookieHttpOnly = False, setCookieSecure = False }
+          --xsrfCookie <- liftIO $ makeXsrfCookie cookieSettings
+          --return $ (addHeader modifiedSessionCookie . addHeader xsrfCookie) NoContent
+
 
 getByEmailSQL :: Query
 getByEmailSQL = [sql|

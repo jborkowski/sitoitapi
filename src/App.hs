@@ -36,7 +36,7 @@ mkApp cfg cs jwts appContext =
     hoistServerWithContext api (Proxy :: Proxy '[SAS.CookieSettings, SAS.JWTSettings])
       (toHandler appContext) (server cs jwts)
   where
-    toHandler :: AppContext -> AppM a -> Handler a
+    toHandler :: AppContext -> AppM IO a -> Handler a
     toHandler ctx a = Handler $ runReaderT (runApp a) ctx
       --r <- liftIO $ runExceptT $ runReaderT (runApp a) appctx
       -- either throw pure r

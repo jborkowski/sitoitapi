@@ -31,8 +31,8 @@ data AppContext = AppContext
   }
 
 
-newtype AppM a = AppT
-  { runApp :: ReaderT AppContext (ExceptT ServerError IO) a
+newtype AppM m a = AppT
+  { runApp :: ReaderT AppContext (ExceptT ServerError m) a
   } deriving ( Functor
              , Applicative
              , Monad
