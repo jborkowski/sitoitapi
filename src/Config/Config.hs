@@ -16,8 +16,8 @@ loadConfig path = do
   libpgConnectionString <- C.require config "db-libpg-connection-string"
   let database = DBConnectionString{..}
   jwtSecret  <- C.require config "jwt-secret"
-  hostStr    <- C.require config "app-host"
-  let host = fromString hostStr
+  jwtExpiry  <- fromInteger <$> C.require config "jwt-expiry"
+  host       <- fromString <$> C.require config "app-host"
   port       <- C.require config "app-port"
   environment<- C.require config "app-env"
   pure AppConfig{..}

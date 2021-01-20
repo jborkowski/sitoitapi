@@ -9,7 +9,8 @@ import           Config.Types
 import           Init
 import           Network.Wai.Handler.Warp
 import           Servant                  (Context (..))
-import           Servant.Auth.Server      (defaultJWTSettings, generateKey)
+import           Servant.Auth.Server      (IsSecure (NotSecure), cookieIsSecure, defaultCookieSettings,
+                                           defaultJWTSettings, generateKey)
 import           System.IO                (hPutStrLn, stderr)
 
 
@@ -25,10 +26,14 @@ main = do
         setPort port $
         setHost host $
         setBeforeMainLoop (hPutStrLn stderr
-                           ("listening on " ++ show host ++ " port " ++ show port))
+                           ("listening on " ++ show host ++ " port " ++ show port)) $
         defaultSettings
   let jwtCfg = defaultJWTSettings jwtKey
-      context = AppContext pool
-      cfg = jwtCfg :. EmptyContext
+      myJwtCfg = JwtConfig jwtSecret jwtExpiry
+      context = AppContext pool myJwtCfg
+      cookieCfg = if environment == "dev"
+                  then defaultCookieSettings{cookieIsSecure=NotSecure}
+                  else defaultCookieSettings
+      cfg = cookieCfg :. jwtCfg :. EmptyContext
 
   runSettings settings $ mkApp cfg jwtCfg context

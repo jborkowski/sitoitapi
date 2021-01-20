@@ -4,12 +4,12 @@
 module Config.Types
   where
 
-import           Control.Monad.Catch        (MonadThrow)
 import           Control.Monad.Except       (ExceptT, MonadError)
 import           Control.Monad.Reader       (MonadIO, MonadReader, ReaderT)
 import           Data.ByteString            (ByteString)
 import           Data.Pool                  (Pool)
 import           Data.Text                  (Text)
+import           Data.Time                  (NominalDiffTime)
 import           Database.PostgreSQL.Simple (Connection)
 import           Network.Wai.Handler.Warp   (HostPreference)
 import           Servant
@@ -19,17 +19,22 @@ newtype DBConnectionString = DBConnectionString
 
 data AppConfig = AppConfig
   { jwtSecret   :: Text
+  , jwtExpiry   :: NominalDiffTime
   , database    :: DBConnectionString
   , host        :: HostPreference
   , port        :: Int
   , environment :: Text
   } deriving (Show)
 
-data AppContext = AppContext
-  { connectionPool :: Pool Connection
-  -- , jwtSettings    :: JWTSettings
+data JwtConfig = JwtConfig
+  { secret   :: Text
+  , expiryIn :: NominalDiffTime
   }
 
+data AppContext = AppContext
+  { connectionPool :: Pool Connection
+  , jwtConfig      :: JwtConfig
+  }
 
 newtype AppM m a = AppT
   { runApp :: ReaderT AppContext (ExceptT ServerError m) a

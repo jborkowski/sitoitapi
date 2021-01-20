@@ -31,14 +31,14 @@ instance FromJSON LoginRequest where
     prependFailure "parsing Login Request failed, "
       (typeMismatch "Object" invalid)
 
-data AuthenticatedUser = AUser
+data AUser = AUser
   { auEmail     :: Text
   , auFirstName :: Text
   , auLastName  :: Text
   , auIsAdmin   :: Bool
   } deriving (Show)
 
-instance ToJSON AuthenticatedUser where
+instance ToJSON AUser where
   toJSON AUser{..} = object
     [ "email" .= auEmail
     , "firstName" .= auFirstName
@@ -46,7 +46,7 @@ instance ToJSON AuthenticatedUser where
     , "isAdmin" .= auIsAdmin
     ]
 
-instance FromJSON AuthenticatedUser where
+instance FromJSON AUser where
   parseJSON (Object v) = do
     auEmail <- v .: "email"
     auFirstName <- v .: "firstName"
@@ -57,8 +57,8 @@ instance FromJSON AuthenticatedUser where
     prependFailure "parsing AuthenticatedUser failed, "
       (typeMismatch "Object" invalid)
 
-instance ToJWT AuthenticatedUser
-instance FromJWT AuthenticatedUser
+instance ToJWT AUser
+instance FromJWT AUser
 
 data DBUser = DBUser
   { dbEmail     :: Text
@@ -69,7 +69,7 @@ data DBUser = DBUser
   , dbCreatedAt :: LocalTime
   }
 
-toAuthUser :: DBUser -> AuthenticatedUser
+toAuthUser :: DBUser -> AUser
 toAuthUser (DBUser email fn ln _ isAdmin _) =
   AUser email fn ln isAdmin
 
@@ -79,7 +79,7 @@ instance FromRow DBUser where
 data UserLoginResponse
   = InvalidCredentials
   | UserNotFound
-  | LoginSuccessful { ulrToken :: Char8.ByteString, ulrUser :: AuthenticatedUser }
+  | LoginSuccessful { ulrToken :: Char8.ByteString, ulrUser :: AUser }
   deriving (Show)
 
 instance ToJSON UserLoginResponse where

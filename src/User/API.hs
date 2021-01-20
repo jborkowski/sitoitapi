@@ -7,32 +7,33 @@
 -- |
 
 module User.API
-  ( UserAPI
+  ( LoginAPI
+  , UserAPI
   , login
+  , user
   ) where
 
 import           Authentication                   (validate)
-import           Config.Types                     (AppM, connectionPool)
-import           Control.Monad.IO.Class           (liftIO)
+import           Config.Types                     (AppM, JwtConfig (..), connectionPool, jwtConfig)
 import           Control.Monad.Reader
 import           Data.Maybe
-import           Data.Pool                        (Pool, putResource, takeResource, withResource)
-import           Data.Text.Encoding               (decodeUtf8)
-import           Database.PostgreSQL.Simple       (Only (..), Query, execute, query, query_)
+import           Data.Pool                        (putResource, takeResource)
+import           Data.Time                        (addUTCTime, getCurrentTime)
+import           Database.PostgreSQL.Simple       (Only (..), Query, query)
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Lib                              (withBody)
 import           Servant
-import           Servant.Auth.Server
+import           Servant.Auth.Server              as SAS
 import           User.Types
 
-type Login =
+type LoginAPI =
   "login"
   :> ReqBody '[JSON] LoginRequest
   :> Post '[JSON] UserLoginResponse
 
-type GetUser = "my" :> Get '[JSON] AuthenticatedUser
+type GetUser = "me" :> Get '[JSON] AUser
 
-type UserAPI = Login -- :<|> GetUser
+type UserAPI = GetUser
 
 login :: (MonadIO m)
       => JWTSettings
@@ -40,22 +41,24 @@ login :: (MonadIO m)
       -> AppM m UserLoginResponse
 login jwtSettings req@LoginRequest{..} = do
   conns <- asks connectionPool
+  (JwtConfig _ expiryIn) <- asks jwtConfig
   (conn, pool) <- liftIO $ takeResource conns
   (users :: [DBUser]) <- liftIO $ query conn getByEmailSQL (Only reqEmail)
   case listToMaybe users of
     Nothing -> do
       liftIO $ putResource pool conn
       err401 `withBody` UserNotFound
-    Just user ->
-      case validate req user of
+    Just dbuser ->
+      case validate req dbuser of
         False -> do
           liftIO $ putResource pool conn
           err401 `withBody` InvalidCredentials
         True -> do
           liftIO $ putResource pool conn
-          let authedUser = toAuthUser user
-
-          eJWT <- liftIO $ makeJWT authedUser jwtSettings Nothing
+          let authedUser = toAuthUser dbuser
+          now <- liftIO getCurrentTime
+          let expiry = addUTCTime expiryIn now
+          eJWT <- liftIO $ SAS.makeJWT authedUser jwtSettings (Just expiry)
 
           case eJWT of
             Left _     -> do
@@ -63,6 +66,12 @@ login jwtSettings req@LoginRequest{..} = do
             Right jwt -> do
               pure $ LoginSuccessful jwt authedUser
 
+user :: (MonadIO m)
+     => SAS.AuthResult AUser
+     -> AppM m AUser
+user (SAS.Authenticated auser) =
+  pure auser
+user _ = throwError err401
 
 getByEmailSQL :: Query
 getByEmailSQL = [sql|

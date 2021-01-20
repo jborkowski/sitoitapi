@@ -1,4 +1,5 @@
-{-# LANGUAGE DataKinds #-}
+{-# LANGUAGE DataKinds     #-}
+{-# LANGUAGE TypeOperators #-}
 -- | Application API aggregator
 
 module API
@@ -9,15 +10,17 @@ module API
 
 import           Config.Types        (AppM)
 import           Flashcard.API       (FlashcardAPI)
-import           Servant             (Proxy (..), ServerT, (:<|>))
+import           Servant             (Proxy (..), ServerT, (:<|>) ((:<|>)), (:>))
 import           Servant.Auth.Server (JWT (..), JWTSettings)
-import           User.API            (UserAPI, login)
+import           Servant.Auth.Server as SAS
+import           User.API            (LoginAPI, UserAPI, login, user)
+import           User.Types          (AUser)
 
---type API auths = UserAPI  -- :<|> FlashcardAPI
-type API = UserAPI  -- :<|> FlashcardAPI
+type API auth = (SAS.Auth auth AUser :> UserAPI) :<|> LoginAPI
+--type API auths = (FlashcardAPI auths) :<|> UserAPI
 
-server :: JWTSettings -> ServerT (API ) (AppM IO)
-server jwts = login jwts
+server :: JWTSettings -> ServerT (API auth) (AppM IO)
+server jwts = user :<|> login jwts
 
-api :: Proxy (API) --'[JWT])
+api :: Proxy (API '[JWT])
 api = Proxy

@@ -26,13 +26,13 @@ import           Servant.Auth.Server        as SAS
   -- :<|> update conns
   -- :<|> delete conns
 
-mkApp :: Context '[ SAS.JWTSettings ]
+mkApp :: Context '[ SAS.CookieSettings, SAS.JWTSettings ]
       -> JWTSettings
       -> AppContext
       -> Application
 mkApp cfg jwts appContext =
   serveWithContext api cfg $
-    hoistServerWithContext api (Proxy :: Proxy '[ SAS.JWTSettings ])
+    hoistServerWithContext api (Proxy :: Proxy '[ SAS.CookieSettings, SAS.JWTSettings ])
       (toHandler appContext) (server jwts)
   where
     toHandler :: AppContext -> AppM IO a -> Handler a
