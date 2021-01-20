@@ -6,9 +6,16 @@
 {-# LANGUAGE TypeOperators       #-}
 
 module Flashcard.API
-  where
+  ( FlashcardAPI
+  , GetFlashcard
+  , GetFlashcards
+  , create
+  , getAll
+  , getById
+  ) where
 
-import           Control.Monad.IO.Class           (liftIO)
+import           Config.Types                     (AppM, connectionPool)
+import           Control.Monad.Reader
 import           Data.Pool                        (Pool, withResource)
 import           Data.UUID                        (UUID)
 import           Database.PostgreSQL.Simple       (Connection, Only (..), Query, begin, commit, execute,
@@ -16,17 +23,17 @@ import           Database.PostgreSQL.Simple       (Connection, Only (..), Query,
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Flashcard.Types
 import           Servant
+import           Servant.Auth.Server              as SAS
+import           User.Types                       (AUser)
 
 type CreateFlashcard = ReqBody '[JSON] FlashcardRequest :> PostCreated '[JSON] Flashcard
-type GetFlashcards = Get '[JSON] [Flashcard]
-type GetFlashcard = Capture "flashcardid" UUID :> Get '[JSON] Flashcard
+type GetFlashcards = "flashcard" :> Get '[JSON] [Flashcard]
+type GetFlashcard = "flashcard" :> Capture "flashcardid" UUID :> Get '[JSON] Flashcard
 type UpdateFlashcard = Capture "flashcardid" UUID :> ReqBody '[JSON] FlashcardRequest :> PutAccepted '[JSON] Flashcard
 type DeleteFlashcard = Capture "flashcardid" UUID :> DeleteNoContent
 
-type FlashcardAPI = "flashcard" :> (CreateFlashcard :<|> GetFlashcards :<|> GetFlashcard :<|> UpdateFlashcard :<|> DeleteFlashcard)
-
-flashcardAPI :: Proxy FlashcardAPI
-flashcardAPI = Proxy
+type FlashcardAPI = GetFlashcards
+-- (CreateFlashcard :<|> GetFlashcards :<|> GetFlashcard :<|> UpdateFlashcard :<|> DeleteFlashcard)
 
 create :: Pool Connection -> FlashcardRequest -> Handler Flashcard
 create conns FlashcardRequest{..} =
@@ -34,15 +41,22 @@ create conns FlashcardRequest{..} =
     [flashcard] <- query conn insertSQL (requestCategory, requestQuestion, requestAnswer, requestStyle)
     pure flashcard
 
-getAll :: Pool Connection -> Handler [Flashcard]
-getAll coons =
-  liftIO . withResource coons $ \conn -> query_ conn getAllSQL
+getAll :: (MonadIO m)
+       => SAS.AuthResult AUser
+       -> AppM m [Flashcard]
+getAll _ = do
+  conns <- asks connectionPool
+  liftIO . withResource conns $ \conn -> query_ conn getAllSQL
 
-getById :: Pool Connection -> UUID -> Handler Flashcard
-getById coons uuid =
-  liftIO . withResource coons $ \conn -> do
-  [flashcard] <- query conn getByIdSQL (Only uuid)
-  pure flashcard
+getById :: (MonadIO m)
+        => SAS.AuthResult AUser
+        -> UUID
+        -> AppM m Flashcard
+getById _ uuid = do
+  conns <- asks connectionPool
+  liftIO . withResource conns $ \conn -> do
+    [flashcard] <- query conn getByIdSQL (Only uuid)
+    pure flashcard
 
 update :: Pool Connection -> UUID -> FlashcardRequest -> Handler Flashcard
 update coons uuid FlashcardRequest{..} =

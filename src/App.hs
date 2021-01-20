@@ -4,27 +4,12 @@
 module App
   where
 
-import           API                        (API, api, server)
-import           Config.Types               (AppContext, AppM, runApp)
-import           Control.Exception          (catch, throw)
-import           Control.Monad.Except       (runExceptT)
-import           Control.Monad.IO.Class     (liftIO)
-import           Control.Monad.Reader       (runReaderT)
-import           Data.Pool                  (Pool)
-import           Database.PostgreSQL.Simple (Connection)
-import           Flashcard.API              (create, delete, getAll, getById, update)
-import           Servant                    (Application, Context, Handler (..), Proxy (..), Server,
-                                             hoistServerWithContext, serveWithContext, (:<|>) ((:<|>)))
-import           Servant.Auth.Server        as SAS
-
-
--- Add custom AppM
-  -- login conns
-  -- :<|> create conns
-  -- :<|> getAll conns
-  -- :<|> getById conns
-  -- :<|> update conns
-  -- :<|> delete conns
+import           API                  (api, server)
+import           Config.Types         (AppContext, AppM, runApp)
+import           Control.Monad.Reader (runReaderT)
+import           Servant              (Application, Context, Handler (..), Proxy (..), hoistServerWithContext,
+                                       serveWithContext)
+import           Servant.Auth.Server  as SAS (CookieSettings, JWTSettings)
 
 mkApp :: Context '[ SAS.CookieSettings, SAS.JWTSettings ]
       -> JWTSettings

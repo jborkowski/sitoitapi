@@ -9,18 +9,20 @@ module API
   ) where
 
 import           Config.Types        (AppM)
-import           Flashcard.API       (FlashcardAPI)
+import qualified Flashcard.API       as F (FlashcardAPI, GetFlashcard, GetFlashcards, create, getAll, getById)
 import           Servant             (Proxy (..), ServerT, (:<|>) ((:<|>)), (:>))
-import           Servant.Auth.Server (JWT (..), JWTSettings)
 import           Servant.Auth.Server as SAS
-import           User.API            (LoginAPI, UserAPI, login, user)
+import qualified User.API            as U (LoginAPI, UserAPI, login, user)
 import           User.Types          (AUser)
 
-type API auth = (SAS.Auth auth AUser :> UserAPI) :<|> LoginAPI
---type API auths = (FlashcardAPI auths) :<|> UserAPI
+type API auth =
+       (SAS.Auth auth AUser :> F.GetFlashcards)
+  :<|> (SAS.Auth auth AUser :> U.UserAPI)
+  :<|> U.LoginAPI
+  :<|> (SAS.Auth auth AUser :> F.GetFlashcard)
 
 server :: JWTSettings -> ServerT (API auth) (AppM IO)
-server jwts = user :<|> login jwts
+server jwts = F.getAll :<|> U.user :<|> U.login jwts :<|> F.getById
 
 api :: Proxy (API '[JWT])
 api = Proxy
