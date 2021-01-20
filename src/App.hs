@@ -26,17 +26,14 @@ import           Servant.Auth.Server        as SAS
   -- :<|> update conns
   -- :<|> delete conns
 
-mkApp :: Context '[SAS.CookieSettings, SAS.JWTSettings]
-      -> CookieSettings
+mkApp :: Context '[ SAS.JWTSettings ]
       -> JWTSettings
       -> AppContext
       -> Application
-mkApp cfg cs jwts appContext =
+mkApp cfg jwts appContext =
   serveWithContext api cfg $
-    hoistServerWithContext api (Proxy :: Proxy '[SAS.CookieSettings, SAS.JWTSettings])
-      (toHandler appContext) (server cs jwts)
+    hoistServerWithContext api (Proxy :: Proxy '[ SAS.JWTSettings ])
+      (toHandler appContext) (server jwts)
   where
     toHandler :: AppContext -> AppM IO a -> Handler a
     toHandler ctx a = Handler $ runReaderT (runApp a) ctx
-      --r <- liftIO $ runExceptT $ runReaderT (runApp a) appctx
-      -- either throw pure r

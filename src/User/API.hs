@@ -13,20 +13,15 @@ module User.API
 
 import           Authentication                   (validate)
 import           Config.Types                     (AppM, connectionPool)
-import           Control.Monad.Except             (throwError)
 import           Control.Monad.IO.Class           (liftIO)
 import           Control.Monad.Reader
-import           Data.ByteString.Lazy.Char8       as Char8
 import           Data.Maybe
 import           Data.Pool                        (Pool, putResource, takeResource, withResource)
 import           Data.Text.Encoding               (decodeUtf8)
-import           Database.PostgreSQL.Simple       (Connection, Only (..), Query, begin, commit, execute,
-                                                   query, query_)
+import           Database.PostgreSQL.Simple       (Only (..), Query, execute, query, query_)
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Lib                              (withBody)
-import           Logger.Types
 import           Servant
-import           Servant.Auth
 import           Servant.Auth.Server
 import           User.Types
 
@@ -40,23 +35,22 @@ type GetUser = "my" :> Get '[JSON] AuthenticatedUser
 type UserAPI = Login -- :<|> GetUser
 
 login :: (MonadIO m)
-      => CookieSettings
-      -> JWTSettings
+      => JWTSettings
       -> LoginRequest
       -> AppM m UserLoginResponse
-login cookieSettings jwtSettings req@LoginRequest{..} = do
+login jwtSettings req@LoginRequest{..} = do
   conns <- asks connectionPool
   (conn, pool) <- liftIO $ takeResource conns
   (users :: [DBUser]) <- liftIO $ query conn getByEmailSQL (Only reqEmail)
   case listToMaybe users of
     Nothing -> do
       liftIO $ putResource pool conn
-      err401 `withBody` UnauthorizedUser
+      err401 `withBody` UserNotFound
     Just user ->
       case validate req user of
         False -> do
           liftIO $ putResource pool conn
-          err401 `withBody` UnauthorizedUser
+          err401 `withBody` InvalidCredentials
         True -> do
           liftIO $ putResource pool conn
           let authedUser = toAuthUser user
@@ -64,15 +58,10 @@ login cookieSettings jwtSettings req@LoginRequest{..} = do
           eJWT <- liftIO $ makeJWT authedUser jwtSettings Nothing
 
           case eJWT of
-            Left a     -> do
-              err401 `withBody` UnauthorizedUser
+            Left _     -> do
+              err401 `withBody` InvalidCredentials
             Right jwt -> do
-              pure $ Logged (Char8.unpack jwt) authedUser
-
-              -- xsrfCookie <- liftIO $ makeXsrfCookie cookieSettings
-              -- let modifiedSessionCookie = sessionCookie { setCookieHttpOnly = False, setCookieSecure = False }
-          --xsrfCookie <- liftIO $ makeXsrfCookie cookieSettings
-          --return $ (addHeader modifiedSessionCookie . addHeader xsrfCookie) NoContent
+              pure $ LoginSuccessful jwt authedUser
 
 
 getByEmailSQL :: Query
