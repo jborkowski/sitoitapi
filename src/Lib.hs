@@ -8,5 +8,5 @@ import           Servant
 
 
 -- | Customize a `ServerError` having `s` status with `b` body contents
-withBody :: (ToJSON b, MonadIO m) => ServerError -> b -> AppM m a
+withBody :: (ToJSON b) => ServerError -> b -> AppM a
 withBody s b = throwError (s { errBody = encode b })

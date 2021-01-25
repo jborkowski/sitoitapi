@@ -35,10 +35,9 @@ type GetUser = "me" :> Get '[JSON] AUser
 
 type UserAPI = GetUser
 
-login :: (MonadIO m)
-      => JWTSettings
+login :: JWTSettings
       -> LoginRequest
-      -> AppM m UserLoginResponse
+      -> AppM UserLoginResponse
 login jwtSettings req@LoginRequest{..} = do
   conns <- asks connectionPool
   (JwtConfig _ expiryIn) <- asks jwtConfig
@@ -66,9 +65,8 @@ login jwtSettings req@LoginRequest{..} = do
             Right jwt -> do
               pure $ LoginSuccessful jwt authedUser
 
-user :: (MonadIO m)
-     => SAS.AuthResult AUser
-     -> AppM m AUser
+user :: SAS.AuthResult AUser
+     -> AppM AUser
 user (SAS.Authenticated auser) =
   pure auser
 user _ = throwError err401

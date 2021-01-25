@@ -7,8 +7,8 @@
 module Flashcard.Types
   where
 
-import           Data.Aeson                           (FromJSON (..), ToJSON (..), Value (..), object, (.:),
-                                                       (.=))
+import           Data.Aeson                           (FromJSON (..), ToJSON (..), Value (..), encode, object,
+                                                       (.:), (.=))
 import           Data.Aeson.Types                     (prependFailure, typeMismatch)
 import           Data.Text                            (Text)
 import           Data.Time                            (LocalTime)
@@ -69,3 +69,15 @@ instance FromJSON FlashcardRequest where
   parseJSON invalid = do
     prependFailure "parsing FlashcardRequest failed, "
       (typeMismatch "Object" invalid)
+
+data FlashcardResponse a =
+    Success a
+  | FlashcardNotFound
+  | FlashcardBadRequest
+
+instance (ToJSON a) => ToJSON (FlashcardResponse a) where
+  toJSON (Success a) = toJSON a
+  toJSON FlashcardNotFound = object
+    [ "message" .= ("Cannot find flashcard with provided uuid" :: Text) ]
+  toJSON FlashcardBadRequest = object
+    [ "message" .= ("Bad Request" :: Text) ]

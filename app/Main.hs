@@ -36,4 +36,4 @@ main = do
                   else defaultCookieSettings
       cfg = cookieCfg :. jwtCfg :. EmptyContext
 
-  runSettings settings $ mkApp cfg jwtCfg context
+  runSettings settings $ mkApp cfg cookieCfg jwtCfg context

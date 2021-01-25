@@ -36,12 +36,12 @@ data AppContext = AppContext
   , jwtConfig      :: JwtConfig
   }
 
-newtype AppM m a = AppT
-  { runApp :: ReaderT AppContext (ExceptT ServerError m) a
+newtype AppM a = AppM
+  { runApp :: ReaderT AppContext (ExceptT ServerError IO) a
   } deriving ( Functor
              , Applicative
              , Monad
              , MonadReader AppContext
-             , MonadError  ServerError
+             , MonadError ServerError
              , MonadIO
              )

@@ -6,74 +6,75 @@
 {-# LANGUAGE TypeOperators       #-}
 
 module Flashcard.API
-  ( FlashcardAPI
+  ( CreateFlashcard
+  , DeleteFlashcard
   , GetFlashcard
   , GetFlashcards
+  , UpdateFlashcard
   , create
+  , delete
   , getAll
   , getById
+  , update
   ) where
 
 import           Config.Types                     (AppM, connectionPool)
 import           Control.Monad.Reader
-import           Data.Pool                        (Pool, withResource)
+import           Data.Maybe
+import           Data.Pool                        (withResource)
 import           Data.UUID                        (UUID)
-import           Database.PostgreSQL.Simple       (Connection, Only (..), Query, begin, commit, execute,
-                                                   query, query_)
+import           Database.PostgreSQL.Simple       (Only (..), Query, execute, query, query_)
 import           Database.PostgreSQL.Simple.SqlQQ
 import           Flashcard.Types
 import           Servant
-import           Servant.Auth.Server              as SAS
-import           User.Types                       (AUser)
 
-type CreateFlashcard = ReqBody '[JSON] FlashcardRequest :> PostCreated '[JSON] Flashcard
+type CreateFlashcard = "flashcard" :> ReqBody '[JSON] FlashcardRequest :> PostCreated '[JSON] Flashcard
 type GetFlashcards = "flashcard" :> Get '[JSON] [Flashcard]
-type GetFlashcard = "flashcard" :> Capture "flashcardid" UUID :> Get '[JSON] Flashcard
-type UpdateFlashcard = Capture "flashcardid" UUID :> ReqBody '[JSON] FlashcardRequest :> PutAccepted '[JSON] Flashcard
-type DeleteFlashcard = Capture "flashcardid" UUID :> DeleteNoContent
+type GetFlashcard = "flashcard" :> Capture "flashcardid" UUID :> Get '[JSON] (FlashcardResponse Flashcard)
+type UpdateFlashcard = "flashcard" :> Capture "flashcardid" UUID :> ReqBody '[JSON] FlashcardRequest :> PutAccepted '[JSON] (FlashcardResponse Flashcard)
+type DeleteFlashcard = "flashcard" :> Capture "flashcardid" UUID :> Delete '[JSON] NoContent
 
-type FlashcardAPI = GetFlashcards
--- (CreateFlashcard :<|> GetFlashcards :<|> GetFlashcard :<|> UpdateFlashcard :<|> DeleteFlashcard)
-
-create :: Pool Connection -> FlashcardRequest -> Handler Flashcard
-create conns FlashcardRequest{..} =
+create :: FlashcardRequest
+       -> AppM Flashcard
+create FlashcardRequest{..} = do
+  conns <- asks connectionPool
   liftIO . withResource conns $ \conn -> do
     [flashcard] <- query conn insertSQL (requestCategory, requestQuestion, requestAnswer, requestStyle)
     pure flashcard
 
-getAll :: (MonadIO m)
-       => SAS.AuthResult AUser
-       -> AppM m [Flashcard]
-getAll _ = do
+getAll :: AppM [Flashcard]
+getAll = do
   conns <- asks connectionPool
   liftIO . withResource conns $ \conn -> query_ conn getAllSQL
 
-getById :: (MonadIO m)
-        => SAS.AuthResult AUser
-        -> UUID
-        -> AppM m Flashcard
-getById _ uuid = do
+getById :: UUID
+        -> AppM (FlashcardResponse Flashcard)
+getById uuid = do
   conns <- asks connectionPool
   liftIO . withResource conns $ \conn -> do
-    [flashcard] <- query conn getByIdSQL (Only uuid)
-    pure flashcard
+    flashcards <- query conn getByIdSQL (Only uuid)
+    pure $ maybe FlashcardNotFound Success (listToMaybe flashcards)
 
-update :: Pool Connection -> UUID -> FlashcardRequest -> Handler Flashcard
-update coons uuid FlashcardRequest{..} =
-  liftIO . withResource coons $ \conn -> do
-  begin conn
-  n <- execute conn updateSQL (requestCategory, requestQuestion, requestAnswer, requestStyle, uuid)
-  [flashcard] <- query conn getByIdSQL (Only uuid)
-  commit conn
-  pure flashcard
-  -- Add Errors handling
-  -- throwError err400 {errBody = "Incorrect flashcard id"}
+update :: UUID
+       -> FlashcardRequest
+       -> AppM (FlashcardResponse Flashcard)
+update uuid FlashcardRequest{..} = do
+  conns <- asks connectionPool
+  liftIO . withResource conns $ \conn -> do
+    n <- execute conn updateSQL (requestCategory, requestQuestion, requestAnswer, requestStyle, uuid)
+    case n > 0 of
+      True ->
+        Success . head <$> query conn getByIdSQL (Only uuid)
+      False ->
+        pure FlashcardNotFound
 
-delete :: Pool Connection -> UUID -> Handler NoContent
-delete coons uuid =
-  liftIO . withResource coons $ \conn -> do
-  _ <- execute conn deleteSQL (Only uuid)
-  pure NoContent
+delete :: UUID
+       -> AppM NoContent
+delete uuid = do
+  conns <- asks connectionPool
+  liftIO . withResource conns $ \conn -> do
+    _ <- execute conn deleteSQL (Only uuid)
+    pure NoContent
 
 insertSQL :: Query
 insertSQL = [sql|
