@@ -30,3 +30,24 @@ trace: Using index-state: 2020-05-31T00:00:00Z for hoogle
 trace: Using latest index state for cabal-install!
 trace: Using index-state: 2020-09-14T00:00:00Z for cabal-install
 ```
+
+## Deployment
+This project is using [NixOps](https://github.com/NixOS/nixops) as tool for deploying.
+
+### Deploy to VirtualBox (locally):
+
+``` sh
+$ nix-shell -i nixops
+$ nixops create ./sitoitapi-configuration.nix ./sitoitapi-virtualbox.nix -d sitoitapi-local
+$ nixops deploy -d sitoitapi-local
+## $ nixops modify ./sitoitapi-configuration.nix ./sitoitapi-virtualbox.nix -d sitoitapi-local
+```
+
+### Deploy to EC2 (AWS)
+
+``` sh
+$ nix-shell -i nixops
+$ nixops create ./sitoitapi-configuration.nix ./sitoitapi-aws.nix -d sitoitapi-prod
+$ nixops deploy -d sitoitapi-prod
+## $ nixops modify ./sitoitapi-configuration.nix ./sitoitapi-virtualbox.nix -d sitoitapi-aws
+```

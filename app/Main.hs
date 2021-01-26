@@ -6,18 +6,22 @@ module Main
 import           App                      (mkApp)
 import           Config.Config            (loadConfig)
 import           Config.Types
+import           Data.Maybe               (fromMaybe, listToMaybe)
 import           Init
 import           Network.Wai.Handler.Warp
 import           Servant                  (Context (..))
 import           Servant.Auth.Server      (IsSecure (NotSecure), cookieIsSecure, defaultCookieSettings,
                                            defaultJWTSettings, generateKey)
+import           System.Environment       (getArgs)
 import           System.IO                (hPutStrLn, stderr)
 
 
 main :: IO ()
 main = do
+  args <- getArgs
+  let configPath = fromMaybe "./application.config" (listToMaybe args)
   putStrLn "Starting Si to IT - API"
-  AppConfig{..} <- loadConfig "./application.config"
+  AppConfig{..} <- loadConfig configPath
   initDB database
   pool <- initConnectionPool database
   jwtKey <- generateKey

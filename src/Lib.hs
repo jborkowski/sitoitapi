@@ -1,9 +1,8 @@
 module Lib
   where
 
-import           Config.Types           (AppM)
-import           Control.Monad.IO.Class (MonadIO (..))
-import           Data.Aeson             (ToJSON, encode)
+import           Config.Types (AppM)
+import           Data.Aeson   (ToJSON, encode)
 import           Servant
 
 
