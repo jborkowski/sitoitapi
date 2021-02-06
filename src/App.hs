@@ -1,16 +1,17 @@
-{-# LANGUAGE DataKinds     #-}
-{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE DataKinds #-}
 -- |
 
 module App
   where
 
-import           API                  (API, api, server)
+import           API                  (api, server)
 import           Config.Types         (AppContext, AppM, runApp)
 import           Control.Monad.Reader (runReaderT)
 import           Servant              (Application, Context, Handler (..), Proxy (..), hoistServerWithContext,
                                        serveWithContext)
-import           Servant.Auth.Server  as SAS (CookieSettings, JWT, JWTSettings)
+import           Servant.Auth.Server  as SAS (CookieSettings, JWTSettings)
+import           Network.Wai.Middleware.Cors (cors, simpleCorsResourcePolicy)
+import           Network.Wai                 (Middleware)
 
 mkApp :: Context '[ SAS.CookieSettings, SAS.JWTSettings ]
       -> CookieSettings
@@ -24,3 +25,6 @@ mkApp cfg cs jwts appContext =
   where
     toHandler :: AppContext -> AppM a -> Handler a
     toHandler ctx a = Handler $ runReaderT (runApp a) ctx
+
+corsConfig :: Middleware
+corsConfig = cors (const $ Just simpleCorsResourcePolicy)

@@ -28,6 +28,7 @@ library
       Flashcard.API
       Flashcard.Types
       App
+      Lib
   hs-source-dirs:
       src
   build-depends:
@@ -45,6 +46,7 @@ library
       , servant-auth-server >=0.4.6.0
       , warp >=3.3
       , wai >=3.2
+      , wai-cors ==0.2.7
       , http-types >=0.12.2
       , markdown-unlit >=0.4
       , http-client >=0.5

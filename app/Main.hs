@@ -3,7 +3,7 @@
 module Main
   where
 
-import           App                      (mkApp)
+import           App                      (mkApp, corsConfig)
 import           Config.Config            (loadConfig)
 import           Config.Types
 import           Data.Maybe               (fromMaybe, listToMaybe)
@@ -40,4 +40,4 @@ main = do
                   else defaultCookieSettings
       cfg = cookieCfg :. jwtCfg :. EmptyContext
 
-  runSettings settings $ mkApp cfg cookieCfg jwtCfg context
+  runSettings settings $ corsConfig $ mkApp cfg cookieCfg jwtCfg context

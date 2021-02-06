@@ -34,6 +34,7 @@ unprotected cs jwts = F.getAll :<|> U.login jwts
 
 --protected :: SAS.AuthResult AUser -> UUID
 --            -> AppM ProtectedAPI
+
 protected (SAS.Authenticated user) =
    F.getById :<|> F.update :<|> F.delete :<|> F.create
 protected _    = throwAll err401
